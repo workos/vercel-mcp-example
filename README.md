@@ -198,4 +198,4 @@ Perfect for building AI tools that need real user authentication and enterprise 
 
 ---
 
-**Questions?** Check the [WorkOS MCP docs](https://workos.com/docs/user-management/mcp) or [Vercel AI SDK docs](https://sdk.vercel.ai/docs/foundations/mcp).
+**Questions?** Check the [WorkOS MCP docs](https://workos.com/docs/user-management/mcp) or [Vercel AI SDK docs](https://vercel.com/docs/ai-sdk).
