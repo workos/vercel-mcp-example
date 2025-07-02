@@ -1,0 +1,42 @@
+{
+  "name": "@workos/vercel-mcp-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A complete example of an authenticated MCP server with WorkOS AuthKit deployed on Vercel",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prettier": "prettier . --check",
+    "prettier:fix": "prettier . --write"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.1",
+    "@tailwindcss/postcss": "^4.1.10",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@vercel/mcp-adapter": "^0.11.1",
+    "@workos-inc/authkit-nextjs": "^2.3.2",
+    "jose": "^6.0.11",
+    "mermaid": "^11.7.0",
+    "next": "^15.3.4",
+    "next-themes": "^0.4.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-syntax-highlighter": "^15.6.1",
+    "swagger-parser": "^10.0.3",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9",
+    "eslint-config-next": "^15.3.4",
+    "postcss": "^8.4.38",
+    "prettier": "^3.5.3",
+    "tailwindcss": "^4.1.10",
+    "typescript": "^5"
+  }
+}
