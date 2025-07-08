@@ -1,0 +1,30 @@
+name: Coana Analysis
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  coana-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Coana Analysis
+        uses: coana-security/coana-action@v1
+        with:
+          api-key: ${{ secrets.COANA_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }} 

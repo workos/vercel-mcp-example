@@ -196,6 +196,37 @@ lib/
 
 Perfect for building AI tools that need real user authentication and enterprise features.
 
+## Contributing
+
+We welcome contributions to this project! Here's how you can help:
+
+### Development Setup
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/vercel-mcp-example.git`
+3. Install dependencies: `npm install`
+4. Create a branch: `git checkout -b feature/your-feature-name`
+5. Make your changes and write tests
+6. Run the test suite: `npm run test`
+7. Run linting and formatting: `npm run lint && npm run prettier`
+8. Push to your fork and submit a pull request
+
+### Guidelines
+
+- Write clear, concise commit messages
+- Add tests for new functionality
+- Ensure all tests pass before submitting
+- Follow the existing code style and conventions
+- Update documentation as needed
+
+### Reporting Issues
+
+Please use the [GitHub Issues](https://github.com/workos/vercel-mcp-example/issues) page to report bugs or request features.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ---
 
 **Questions?** Check the [WorkOS MCP docs](https://workos.com/docs/user-management/mcp) or [Vercel AI SDK docs](https://sdk.vercel.ai/docs/foundations/mcp).

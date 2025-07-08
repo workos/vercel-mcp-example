@@ -1,0 +1,30 @@
+name: Coana Guardrail
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  coana-guardrail:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Coana Guardrail
+        uses: coana-security/coana-guardrail@v1
+        with:
+          api-key: ${{ secrets.COANA_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }} 
