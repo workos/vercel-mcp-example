@@ -1,11 +1,11 @@
-import SwaggerParser from "swagger-parser";
-import { z } from "zod";
-import { User } from "./auth/types";
+import SwaggerParser from 'swagger-parser';
+import { z } from 'zod';
+import { User } from './auth/types';
 
 // OpenAPI specification type definitions
 interface OpenAPIParameter {
   name: string;
-  in: "query" | "header" | "path" | "cookie" | "body";
+  in: 'query' | 'header' | 'path' | 'cookie' | 'body';
   required?: boolean;
   schema?: {
     type?: string;
@@ -19,7 +19,7 @@ interface OpenAPIParameter {
 
 interface OpenAPIRequestBody {
   content?: {
-    "application/json"?: {
+    'application/json'?: {
       schema?: {
         properties?: Record<string, unknown>;
       };
@@ -68,22 +68,26 @@ export interface MCPTool {
  */
 export async function generateMcpToolsFromOpenAPI(
   config: OpenAPIConfig,
-  user: User,
+  user: User
 ): Promise<MCPTool[]> {
   try {
     // WORKAROUND: The swagger-parser types are not compatible with modern ES modules.
     // Using type assertion to work with the library
-    const api = await (SwaggerParser as unknown as { parse: (url: string) => Promise<OpenAPISpec> }).parse(config.specUrl);
+    const api = await (
+      SwaggerParser as unknown as {
+        parse: (url: string) => Promise<OpenAPISpec>;
+      }
+    ).parse(config.specUrl);
     const tools: MCPTool[] = [];
 
     // Process each path and operation
     for (const [path, pathItem] of Object.entries(api.paths || {})) {
-      if (!pathItem || typeof pathItem !== "object") continue;
+      if (!pathItem || typeof pathItem !== 'object') continue;
 
       for (const [method, operation] of Object.entries(pathItem)) {
         if (
           !operation ||
-          typeof operation !== "object" ||
+          typeof operation !== 'object' ||
           !operation.operationId
         )
           continue;
@@ -93,7 +97,7 @@ export async function generateMcpToolsFromOpenAPI(
           method.toUpperCase(),
           operation,
           config,
-          user,
+          user
         );
 
         if (tool) {
@@ -104,11 +108,11 @@ export async function generateMcpToolsFromOpenAPI(
 
     return tools;
   } catch (error) {
-    console.error("Error generating MCP tools from OpenAPI spec:", error);
+    console.error('Error generating MCP tools from OpenAPI spec:', error);
     if (error instanceof Error) {
       throw new Error(`Failed to process OpenAPI spec: ${error.message}`);
     }
-    throw new Error("Failed to process OpenAPI spec");
+    throw new Error('Failed to process OpenAPI spec');
   }
 }
 
@@ -120,11 +124,11 @@ function createMCPToolFromOperation(
   method: string,
   operation: OpenAPIOperation,
   config: OpenAPIConfig,
-  user: User,
+  user: User
 ): MCPTool | null {
   const toolName =
     operation.operationId ||
-    `${method.toLowerCase()}${path.replace(/[^a-zA-Z0-9]/g, "")}`;
+    `${method.toLowerCase()}${path.replace(/[^a-zA-Z0-9]/g, '')}`;
   const description =
     operation.summary || operation.description || `${method} ${path}`;
 
@@ -138,21 +142,21 @@ function createMCPToolFromOperation(
         config.baseUrl,
         path,
         args,
-        operation.parameters || [],
+        operation.parameters || []
       );
       const requestOptions = buildRequestOptions(
         method,
         args,
         operation,
         config,
-        user,
+        user
       );
 
       const response = await fetch(url, requestOptions);
 
       if (!response.ok) {
         throw new Error(
-          `API request failed: ${response.status} ${response.statusText}`,
+          `API request failed: ${response.status} ${response.statusText}`
         );
       }
 
@@ -161,9 +165,9 @@ function createMCPToolFromOperation(
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify({
-              status: "success",
+              status: 'success',
               data,
               operation: operation.operationId,
             }),
@@ -173,13 +177,13 @@ function createMCPToolFromOperation(
     } catch (error) {
       console.error(`Error in ${toolName}:`, error);
       const errorMessage =
-        error instanceof Error ? error.message : "API request failed";
+        error instanceof Error ? error.message : 'API request failed';
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify({
-              status: "error",
+              status: 'error',
               message: errorMessage,
               operation: operation.operationId,
             }),
@@ -201,7 +205,7 @@ function createMCPToolFromOperation(
  * Generate Zod schema from OpenAPI parameters
  */
 function generateZodSchemaFromParameters(
-  parameters: OpenAPIParameter[],
+  parameters: OpenAPIParameter[]
 ): Record<string, z.ZodTypeAny> {
   const schema: Record<string, z.ZodTypeAny> = {};
 
@@ -211,23 +215,23 @@ function generateZodSchemaFromParameters(
     let zodType;
 
     switch (param.schema.type) {
-      case "string":
+      case 'string':
         zodType = z.string();
         if (param.schema.minLength)
           zodType = zodType.min(param.schema.minLength);
         if (param.schema.maxLength)
           zodType = zodType.max(param.schema.maxLength);
         break;
-      case "integer":
-      case "number":
+      case 'integer':
+      case 'number':
         zodType = z.number();
         if (param.schema.minimum) zodType = zodType.min(param.schema.minimum);
         if (param.schema.maximum) zodType = zodType.max(param.schema.maximum);
         break;
-      case "boolean":
+      case 'boolean':
         zodType = z.boolean();
         break;
-      case "array":
+      case 'array':
         zodType = z.array(z.unknown()); // Could be more sophisticated
         break;
       default:
@@ -255,24 +259,24 @@ function buildRequestUrl(
   baseUrl: string,
   path: string,
   args: Record<string, unknown>,
-  parameters: OpenAPIParameter[],
+  parameters: OpenAPIParameter[]
 ): string {
   let finalUrl = baseUrl + path;
   const queryParams = new URLSearchParams();
 
   // Replace path parameters
   for (const param of parameters) {
-    if (param.in === "path" && args[param.name] !== undefined) {
+    if (param.in === 'path' && args[param.name] !== undefined) {
       finalUrl = finalUrl.replace(
         `{${param.name}}`,
-        encodeURIComponent(String(args[param.name])),
+        encodeURIComponent(String(args[param.name]))
       );
     }
   }
 
   // Add query parameters
   for (const param of parameters) {
-    if (param.in === "query" && args[param.name] !== undefined) {
+    if (param.in === 'query' && args[param.name] !== undefined) {
       queryParams.append(param.name, String(args[param.name]));
     }
   }
@@ -289,10 +293,10 @@ function buildRequestOptions(
   args: Record<string, unknown>,
   operation: OpenAPIOperation,
   config: OpenAPIConfig,
-  user: User,
+  user: User
 ): RequestInit {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
 
   // Add API authentication
@@ -307,7 +311,7 @@ function buildRequestOptions(
 
   // Add header parameters
   for (const param of operation.parameters || []) {
-    if (param.in === "header" && args[param.name] !== undefined) {
+    if (param.in === 'header' && args[param.name] !== undefined) {
       headers[param.name] = String(args[param.name]);
     }
   }
@@ -318,15 +322,15 @@ function buildRequestOptions(
   };
 
   // Add request body for POST/PUT/PATCH
-  if (["POST", "PUT", "PATCH"].includes(method)) {
+  if (['POST', 'PUT', 'PATCH'].includes(method)) {
     const requestBody = operation.requestBody;
     if (
       requestBody &&
       requestBody.content &&
-      requestBody.content["application/json"]
+      requestBody.content['application/json']
     ) {
       let body: Record<string, unknown> = {};
-      const schema = requestBody.content?.["application/json"]?.schema;
+      const schema = requestBody.content?.['application/json']?.schema;
       if (schema && schema.properties) {
         for (const prop in schema.properties) {
           if (args[prop] !== undefined) {
@@ -336,7 +340,7 @@ function buildRequestOptions(
       } else {
         // fallback for simple body
         const bodyParam = (operation.parameters || []).find(
-          (p: OpenAPIParameter) => p.in === "body",
+          (p: OpenAPIParameter) => p.in === 'body'
         );
         if (bodyParam && args[bodyParam.name] !== undefined) {
           body = args[bodyParam.name] as Record<string, unknown>;
@@ -366,7 +370,7 @@ export function getOpenAPIConfigFromEnv(): OpenAPIConfig | null {
     specUrl,
     baseUrl,
     apiKey: process.env.OPENAPI_API_KEY,
-    userIdHeader: process.env.OPENAPI_USER_ID_HEADER || "X-User-ID",
-    authHeader: process.env.OPENAPI_AUTH_HEADER || "Authorization",
+    userIdHeader: process.env.OPENAPI_USER_ID_HEADER || 'X-User-ID',
+    authHeader: process.env.OPENAPI_AUTH_HEADER || 'Authorization',
   };
 }

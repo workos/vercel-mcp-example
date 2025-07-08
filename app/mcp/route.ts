@@ -1,17 +1,20 @@
 /**
  * AuthHandler Pattern Demo: Vercel AI SDK + WorkOS AuthKit
- * 
+ *
  * This file demonstrates the powerful authHandler wrapper pattern that
- * transforms any MCP server built with the Vercel AI SDK into an 
+ * transforms any MCP server built with the Vercel AI SDK into an
  * enterprise-ready, authenticated service with just a few lines of code.
- * 
+ *
  * Key components:
  * 1. createMcpHandler() - builds the MCP server with type-safe tools
  * 2. experimental_withMcpAuth() - wraps with WorkOS authentication
  * 3. Zero-config deployment to Vercel Edge
  */
 
-import { createMcpHandler, experimental_withMcpAuth } from '@vercel/mcp-adapter';
+import {
+  createMcpHandler,
+  experimental_withMcpAuth,
+} from '@vercel/mcp-adapter';
 import { getWorkOS } from '@workos-inc/authkit-nextjs';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
 import { User, WorkOSAuthInfo } from '@/lib/auth/types';
@@ -66,9 +69,9 @@ const authHandler = experimental_withMcpAuth(
         profilePictureUrl: userProfile.profilePictureUrl,
       };
 
-      const workosAuthInfo: WorkOSAuthInfo = { 
-        user, 
-        claims: payload 
+      const workosAuthInfo: WorkOSAuthInfo = {
+        user,
+        claims: payload,
       };
 
       // Return MCP AuthInfo with our data in extra
@@ -85,15 +88,15 @@ const authHandler = experimental_withMcpAuth(
         errorObj.code === 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED'
           ? 'Invalid token signature. Please sign in again.'
           : errorObj.message || 'Authentication failed. Please sign in again.';
-      
+
       throw new Error(errorMessage);
     }
   },
   {
     // Allow unauthenticated requests through - individual tools decide auth requirements
     // This enables a mix of public tools (ping) and private tools (getUserProfile)
-    required: false, 
-  },
+    required: false,
+  }
 );
 
 export { authHandler as GET, authHandler as POST };

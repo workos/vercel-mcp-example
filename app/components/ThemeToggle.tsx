@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 
 export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
@@ -17,7 +17,7 @@ export default function ThemeToggle() {
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
       className="relative p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all duration-200"
       aria-label="Toggle theme"
     >
@@ -25,9 +25,9 @@ export default function ThemeToggle() {
         {/* Sun icon */}
         <svg
           className={`absolute inset-0 w-5 h-5 text-neutral-700 transition-all duration-300 ${
-            theme === "dark"
-              ? "opacity-0 rotate-90 scale-0"
-              : "opacity-100 rotate-0 scale-100"
+            theme === 'dark'
+              ? 'opacity-0 rotate-90 scale-0'
+              : 'opacity-100 rotate-0 scale-100'
           }`}
           fill="none"
           stroke="currentColor"
@@ -43,13 +43,13 @@ export default function ThemeToggle() {
           <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
         </svg>
-        
+
         {/* Moon icon */}
         <svg
           className={`absolute inset-0 w-5 h-5 text-neutral-300 transition-all duration-300 ${
-            theme === "dark"
-              ? "opacity-100 rotate-0 scale-100"
-              : "opacity-0 -rotate-90 scale-0"
+            theme === 'dark'
+              ? 'opacity-100 rotate-0 scale-100'
+              : 'opacity-0 -rotate-90 scale-0'
           }`}
           fill="none"
           stroke="currentColor"
@@ -60,4 +60,4 @@ export default function ThemeToggle() {
       </div>
     </button>
   );
-} 
+}

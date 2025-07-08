@@ -47,4 +47,4 @@ describe('Authentication Helpers', () => {
       );
     });
   });
-}); 
+});

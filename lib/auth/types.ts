@@ -9,4 +9,4 @@ export type User = {
 export type WorkOSAuthInfo = {
   user: User;
   claims: Record<string, unknown>;
-}; 
+};

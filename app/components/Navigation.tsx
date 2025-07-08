@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import ThemeToggle from "./ThemeToggle";
-import { User } from "@/lib/auth/types";
+import Link from 'next/link';
+import Image from 'next/image';
+import ThemeToggle from './ThemeToggle';
+import { User } from '@/lib/auth/types';
 
 interface NavigationProps {
   user: User | null;
@@ -17,15 +17,37 @@ export default function Navigation({ user }: NavigationProps) {
           <div className="flex items-center space-x-8">
             {/* Brand Logo */}
             <Link href="/" className="flex-shrink-0">
-              <Image src="/workos-logo-vector.svg" alt="WorkOS Logo" width={40} height={40} priority />
+              <Image
+                src="/workos-logo-vector.svg"
+                alt="WorkOS Logo"
+                width={40}
+                height={40}
+                priority
+              />
             </Link>
             {/* Primary Navigation */}
             <ul className="hidden md:flex items-center space-x-8 text-sm font-medium">
-              <li><Link href="/getting-started" className="hover:text-blue-600 dark:hover:text-blue-400">Getting Started</Link></li>
-              <li><a href="https://workos.com/docs/user-management/mcp" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 dark:hover:text-blue-400">Docs</a></li>
+              <li>
+                <Link
+                  href="/getting-started"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Getting Started
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://workos.com/docs/user-management/mcp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Docs
+                </a>
+              </li>
             </ul>
           </div>
-          
+
           {/* Auth Status & Theme Toggle */}
           <div className="flex items-center space-x-3">
             <ThemeToggle />
@@ -54,12 +76,26 @@ export default function Navigation({ user }: NavigationProps) {
             {user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3 bg-white dark:bg-neutral-900 border border-green-200/50 dark:border-green-700/40 rounded-full px-4 py-2">
-                  <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 11V9a4 4 0 014-4 4 4 0 014 4v2m-7 0h14a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2v-7a2 2 0 012-2z" />
+                  <svg
+                    className="w-4 h-4 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 11V9a4 4 0 014-4 4 4 0 014 4v2m-7 0h14a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2v-7a2 2 0 012-2z"
+                    />
                   </svg>
                   <div className="text-sm">
-                    <div className="font-medium text-green-700 dark:text-green-300">{user.firstName || user.email}</div>
-                    <div className="text-green-600 dark:text-green-500 text-xs">Authenticated</div>
+                    <div className="font-medium text-green-700 dark:text-green-300">
+                      {user.firstName || user.email}
+                    </div>
+                    <div className="text-green-600 dark:text-green-500 text-xs">
+                      Authenticated
+                    </div>
                   </div>
                 </div>
                 <a
@@ -72,12 +108,26 @@ export default function Navigation({ user }: NavigationProps) {
             ) : (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3 bg-white dark:bg-neutral-900 border border-gray-300/60 dark:border-neutral-700/60 rounded-full px-4 py-2">
-                  <svg className="w-4 h-4 text-gray-500 dark:text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c1.657 0 3-1.343 3-3V7a3 3 0 00-6 0v1c0 1.657 1.343 3 3 3zm0 0v2m-6 4h12a2 2 0 002-2v-4a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2z" />
+                  <svg
+                    className="w-4 h-4 text-gray-500 dark:text-neutral-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 11c1.657 0 3-1.343 3-3V7a3 3 0 00-6 0v1c0 1.657 1.343 3 3 3zm0 0v2m-6 4h12a2 2 0 002-2v-4a2 2 0 00-2-2H6a2 2 0 00-2 2v4a2 2 0 002 2z"
+                    />
                   </svg>
                   <div className="text-sm">
-                    <div className="font-medium text-gray-700 dark:text-neutral-300">Guest</div>
-                    <div className="text-gray-500 dark:text-neutral-500 text-xs">Unauthenticated</div>
+                    <div className="font-medium text-gray-700 dark:text-neutral-300">
+                      Guest
+                    </div>
+                    <div className="text-gray-500 dark:text-neutral-500 text-xs">
+                      Unauthenticated
+                    </div>
                   </div>
                 </div>
                 <a
@@ -93,4 +143,4 @@ export default function Navigation({ user }: NavigationProps) {
       </div>
     </nav>
   );
-} 
+}
