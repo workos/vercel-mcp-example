@@ -7,27 +7,81 @@ The **clearest and simplest** example of how to add enterprise authentication to
 This demo illustrates the `authHandler` pattern - a simple wrapper that transforms any MCP server into an authenticated service:
 
 ```typescript
-// 1. Build your MCP server (business logic)
+// 1. Start with pure business logic (no auth)
 const handler = createMcpHandler((server) => {
-  server.tool('getUserData', {}, async (args, { authInfo }) => {
-    const user = ensureUserAuthenticated(authInfo); // ← Get authenticated user
-    return { userData: await getData(user.id) };    // ← Access user's data safely
-  });
+  server.tool(
+    'createExampleData',
+    'Creates a new example data item',
+    {
+      name: z.string().min(1),
+      description: z.string().min(1),
+    },
+    async ({ name, description }) => {
+      // Simple business logic - anyone can create data
+      const newItem = {
+        id: Math.random().toString(36).substr(2, 9),
+        name,
+        description,
+        createdAt: new Date().toISOString(),
+      };
+      return {
+        content: [{ type: 'text', text: `Created: ${JSON.stringify(newItem)}` }],
+      };
+    }
+  );
 });
 
-// 2. Add authentication (security wrapper)
+export { handler as GET, handler as POST };
+```
+
+```typescript
+// 2. Add authentication to protect your business logic
+import { experimental_withMcpAuth } from '@vercel/mcp-adapter';
+import { ensureUserAuthenticated } from './lib/auth/helpers';
+import { createExampleData } from './lib/business/examples';
+
+const handler = createMcpHandler((server) => {
+  server.tool(
+    'createExampleData',
+    'Creates a new example data item for the authenticated user',
+    {
+      name: z.string().min(1),
+      description: z.string().min(1),
+    },
+    async ({ name, description }, { authInfo }) => {
+      // Now require authentication and get user context
+      const user = ensureUserAuthenticated(authInfo);
+      const newItem = await createExampleData({ name, description }, user);
+      return {
+        content: [{ 
+          type: 'text', 
+          text: `Created for ${user.email}: ${JSON.stringify(newItem)}` 
+        }],
+      };
+    }
+  );
+});
+
+// Wrap with WorkOS authentication
 const authHandler = experimental_withMcpAuth(
   handler,
-  async (request, token) => {
+  async (request, bearerToken) => {
+    if (!bearerToken) return undefined;
+    
     // Verify JWT and fetch user from WorkOS
-    const { payload } = await jwtVerify(token, JWKS);
+    const { payload } = await jwtVerify(bearerToken, JWKS);
     const user = await workos.userManagement.getUser(payload.sub);
     
-    return { token, clientId, scopes: [], extra: { user, claims: payload } };
-  }
+    return { 
+      token: bearerToken, 
+      clientId: payload.sub, 
+      scopes: [], 
+      extra: { user, claims: payload } 
+    };
+  },
+  { required: true }
 );
 
-// 3. Expose authenticated MCP server
 export { authHandler as GET, authHandler as POST };
 ```
 
@@ -88,20 +142,39 @@ The server in `app/mcp/route.ts` shows 5 example tools:
 
 ### Key Pattern: `ensureUserAuthenticated`
 
+Our authentication helper makes it easy to require authentication in any tool:
+
 ```typescript
-// Helper function that ensures authentication
-const ensureUserAuthenticated = (authInfo: any): User => {
+// lib/auth/helpers.ts
+export const ensureUserAuthenticated = (authInfo: any): User => {
   const workosAuth = authInfo?.extra as WorkOSAuthInfo;
   if (!workosAuth || !workosAuth.user) {
     throw new Error('Authentication required for this tool');
   }
   return workosAuth.user;
 };
+```
 
-// Use in any tool that needs authentication
-server.tool('protectedTool', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // Throws if not authenticated
-  // ... now safely use user.id, user.email, etc.
+Use it in your tools to safely access user data:
+
+```typescript
+// Without auth - anyone can call
+server.tool('getPublicStats', {}, async () => {
+  return { 
+    content: [{ type: 'text', text: 'Total users: 1,234' }] 
+  };
+});
+
+// With auth - only authenticated users
+server.tool('getUserData', {}, async (args, { authInfo }) => {
+  const user = ensureUserAuthenticated(authInfo); // ← Throws if not authenticated
+  const data = await getExampleData(user);         // ← Safe to use user.id
+  return { 
+    content: [{ 
+      type: 'text', 
+      text: `Found ${data.length} items for ${user.email}` 
+    }] 
+  };
 });
 ```
 
@@ -110,16 +183,31 @@ server.tool('protectedTool', {}, async (args, { authInfo }) => {
 The demo shows how to support both public and private tools in the same server:
 
 ```typescript
+import { isAuthenticated } from './lib/auth/helpers';
+
 // Public tool - anyone can call
 server.tool('ping', {}, async (args, { authInfo }) => {
-  const isAuth = isAuthenticated(authInfo); // Check without throwing
-  return { message: isAuth ? 'Hello authenticated user!' : 'Hello world!' };
+  const authenticated = isAuthenticated(authInfo);
+  return { 
+    content: [{ 
+      type: 'text', 
+      text: authenticated 
+        ? `Hello ${authInfo.extra.user.email}! 🔒` 
+        : 'Hello anonymous user! 🌍' 
+    }] 
+  };
 });
 
 // Private tool - authentication required  
-server.tool('getUserData', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // Throws if not authenticated
-  return { userData: await getUserData(user.id) };
+server.tool('listExampleData', {}, async (args, { authInfo }) => {
+  const user = ensureUserAuthenticated(authInfo); // ← Throws if not authenticated
+  const data = await getExampleData(user);
+  return { 
+    content: [{ 
+      type: 'text', 
+      text: `Found ${data.length} items for ${user.email}` 
+    }] 
+  };
 });
 ```
 
