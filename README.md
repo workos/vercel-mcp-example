@@ -4,88 +4,98 @@ The **clearest and simplest** example of how to add enterprise authentication to
 
 ## What This Demo Shows
 
-This demo illustrates the `authHandler` pattern - a simple wrapper that transforms any MCP server into an authenticated service:
+This demo shows how WorkOS integrates with the Vercel MCP adapter using three layers:
 
 ```typescript
-// 1. Start with pure business logic (no auth)
-const handler = createMcpHandler((server) => {
-  server.tool(
-    'createExampleData',
-    'Creates a new example data item',
-    {
-      name: z.string().min(1),
-      description: z.string().min(1),
-      ownerId: z.string().min(1), // Business logic needs to know who owns it
-    },
-    async ({ name, description, ownerId }) => {
-      // Simple business logic - takes ownerId as a parameter
-      const newItem = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        description,
-        ownerId, // Store who created this item
-        createdAt: new Date().toISOString(),
-      };
-      return {
-        content: [{ type: 'text', text: `Created: ${JSON.stringify(newItem)}` }],
-      };
-    }
-  );
-});
+// 1. Standard MCP server with business logic (Vercel MCP adapter)
+import { createMcpHandler } from "@vercel/mcp-adapter";
+
+const handler = createMcpHandler(
+  (server) => {
+    server.tool(
+      "createExampleData",
+      "Creates a new example data item",
+      {
+        name: z.string().min(1),
+        description: z.string().min(1),
+      },
+      async ({ name, description }) => {
+        // Pure business logic - no auth yet
+        const newItem = {
+          id: Math.random().toString(36).substr(2, 9),
+          name,
+          description,
+          createdAt: new Date().toISOString(),
+        };
+        return {
+          content: [{ type: "text", text: `Created: ${JSON.stringify(newItem)}` }],
+        };
+      }
+    );
+  }
+);
 
 export { handler as GET, handler as POST };
 ```
 
 ```typescript
-// 2. Add authentication to automatically provide user context
-import { experimental_withMcpAuth } from '@vercel/mcp-adapter';
-import { ensureUserAuthenticated } from './lib/auth/helpers';
-import { createExampleData } from './lib/business/examples';
+// 2. Add WorkOS authentication with custom helpers
+import { createMcpHandler, experimental_withMcpAuth } from "@vercel/mcp-adapter";
+import { jwtVerify } from "jose";
+import { ensureUserAuthenticated } from "./lib/auth/helpers"; // ← Our custom WorkOS helper
+import { createExampleData } from "./lib/business/examples";
 
-const handler = createMcpHandler((server) => {
-  server.tool(
-    'createExampleData',
-    'Creates a new example data item for the authenticated user',
-    {
-      name: z.string().min(1),
-      description: z.string().min(1),
-      // No ownerId needed - auth provides it automatically!
-    },
-    async ({ name, description }, { authInfo }) => {
-      // Extract user ID from authentication context
-      const user = ensureUserAuthenticated(authInfo);
-      
-      // Pass user.id as ownerId to your business logic
-      const newItem = await createExampleData({ name, description }, user);
-      return {
-        content: [{ 
-          type: 'text', 
-          text: `Created for ${user.email}: ${JSON.stringify(newItem)}` 
-        }],
-      };
-    }
-  );
-});
+const handler = createMcpHandler(
+  (server) => {
+    server.tool(
+      "createExampleData",
+      "Creates a new example data item for the authenticated user",
+      {
+        name: z.string().min(1),
+        description: z.string().min(1),
+      },
+      async ({ name, description }, extra) => {
+        // Use our custom helper that wraps WorkOS user extraction
+        const user = ensureUserAuthenticated(extra.authInfo);
+        const newItem = await createExampleData({ name, description }, user);
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Created for ${user.email}: ${JSON.stringify(newItem)}` 
+          }],
+        };
+      }
+    );
+  }
+);
 
-// Wrap with WorkOS authentication
-const authHandler = experimental_withMcpAuth(
-  handler,
-  async (request, bearerToken) => {
-    if (!bearerToken) return undefined;
-    
-    // Verify JWT and fetch user from WorkOS
+// Direct WorkOS integration in verifyToken function
+const verifyToken = async (req: Request, bearerToken?: string): Promise<AuthInfo | undefined> => {
+  if (!bearerToken) return undefined;
+
+  try {
+    // Direct WorkOS JWT verification
     const { payload } = await jwtVerify(bearerToken, JWKS);
+    
+    // Direct WorkOS user management API call
     const user = await workos.userManagement.getUser(payload.sub);
     
-    return { 
-      token: bearerToken, 
-      clientId: payload.sub, 
-      scopes: [], 
-      extra: { user, claims: payload } // ← User context available in tools
+    return {
+      token: bearerToken,
+      scopes: ["read:data", "write:data"],
+      clientId: user.id,
+      extra: { user, claims: payload } // WorkOS user context for our helpers
     };
-  },
-  { required: true }
-);
+  } catch (error) {
+    return undefined;
+  }
+};
+
+// Vercel adapter auth wrapper
+const authHandler = experimental_withMcpAuth(handler, verifyToken, { 
+  required: true,
+  requiredScopes: ["read:data"],
+});
 
 export { authHandler as GET, authHandler as POST };
 ```
@@ -145,79 +155,94 @@ The server in `app/mcp/route.ts` shows 5 example tools:
 4. **`updateExampleData`** - Update user data (auth required)
 5. **`getUserProfile`** - Get WorkOS user profile (auth required)
 
-### Key Pattern: `ensureUserAuthenticated`
+### Key Pattern: Custom WorkOS Helper Library
 
-Our authentication helper makes it easy to require authentication in any tool:
+The `ensureUserAuthenticated` function is **our custom library function** that wraps WorkOS user extraction:
 
 ```typescript
-// lib/auth/helpers.ts
-export const ensureUserAuthenticated = (authInfo: any): User => {
-  const workosAuth = authInfo?.extra as WorkOSAuthInfo;
+// lib/auth/helpers.ts - Our custom WorkOS wrapper
+export const ensureUserAuthenticated = (authInfo: AuthInfo | undefined): User => {
+  if (!authInfo?.extra) {
+    throw new Error('Authentication required for this tool');
+  }
+  
+  // Extract WorkOS user from the authInfo.extra (set by our verifyToken function)
+  const workosAuth = authInfo.extra as WorkOSAuthInfo;
   if (!workosAuth || !workosAuth.user) {
     throw new Error('Authentication required for this tool');
   }
-  return workosAuth.user;
+  return workosAuth.user; // Return the WorkOS user object
 };
 ```
 
-Use it in your tools to safely access user data:
+This custom helper abstracts WorkOS user extraction and works seamlessly with the Vercel adapter:
 
 ```typescript
-// Without auth - business logic needs explicit user context
-server.tool('getPublicStats', {
-  ownerId: z.string().min(1) // Caller must provide user ID
-}, async ({ ownerId }) => {
-  const data = await getDataForUser(ownerId);
-  return { 
-    content: [{ type: 'text', text: `Found ${data.length} items for user ${ownerId}` }] 
-  };
-});
-
-// With auth - user context provided automatically
-server.tool('getUserData', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // ← Get authenticated user
-  const data = await getExampleData(user);         // ← Pass user object to business logic
+// In your MCP tools - use our custom WorkOS helper
+server.tool("getUserData", {}, async (args, extra) => {
+  // Our helper extracts the WorkOS user from Vercel adapter's authInfo
+  const user = ensureUserAuthenticated(extra.authInfo); 
+  const data = await getExampleData(user); // Use WorkOS user in business logic
   return { 
     content: [{ 
-      type: 'text', 
+      type: "text", 
       text: `Found ${data.length} items for ${user.email}` 
     }] 
   };
 });
-```
 
-### Mixed Authentication Support
-
-The demo shows how to support both public and private tools in the same server:
-
-```typescript
-import { isAuthenticated } from './lib/auth/helpers';
-
-// Public tool - anyone can call
-server.tool('ping', {}, async (args, { authInfo }) => {
-  const authenticated = isAuthenticated(authInfo);
+// Optional auth with our helper
+server.tool("ping", {}, async (args, extra) => {
+  const authenticated = isAuthenticated(extra.authInfo); // Another custom helper
   return { 
     content: [{ 
-      type: 'text', 
+      type: "text", 
       text: authenticated 
-        ? `Hello ${authInfo.extra.user.email}! 🔒` 
-        : 'Hello anonymous user! 🌍' 
-    }] 
-  };
-});
-
-// Private tool - authentication required  
-server.tool('listExampleData', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // ← Throws if not authenticated
-  const data = await getExampleData(user);
-  return { 
-    content: [{ 
-      type: 'text', 
-      text: `Found ${data.length} items for ${user.email}` 
+        ? `Hello ${extra.authInfo.extra.user.email}! 🔒` 
+        : "Hello anonymous user! 🌍" 
     }] 
   };
 });
 ```
+
+### Three-Layer Integration
+
+This demo shows three layers working together seamlessly:
+
+1. **Vercel MCP Adapter**: Framework for MCP servers
+2. **Direct WorkOS Integration**: JWT verification and user management in `verifyToken`
+3. **Custom WorkOS Helpers**: Our library functions that abstract WorkOS complexity
+
+```typescript
+// Layer 1: Vercel MCP Adapter - standard MCP server
+const handler = createMcpHandler((server) => {
+  // Layer 3: Our custom helpers abstract WorkOS complexity  
+  server.tool("listExampleData", {}, async (args, extra) => {
+    const user = ensureUserAuthenticated(extra.authInfo); // ← Our custom WorkOS helper
+    const data = await getExampleData(user);
+    return { 
+      content: [{ 
+        type: "text", 
+        text: `Found ${data.length} items for ${user.email}` 
+      }] 
+    };
+  });
+});
+
+// Layer 2: Direct WorkOS integration in verifyToken
+const verifyToken = async (req: Request, bearerToken?: string) => {
+  // Direct WorkOS API calls
+  const { payload } = await jwtVerify(bearerToken, JWKS);        // ← WorkOS JWT
+  const user = await workos.userManagement.getUser(payload.sub); // ← WorkOS User API
+  
+  return { token: bearerToken, clientId: user.id, extra: { user, claims: payload } };
+};
+
+// Layer 1: Vercel adapter ties it all together
+const authHandler = experimental_withMcpAuth(handler, verifyToken, { required: true });
+```
+
+**Result**: WorkOS enterprise authentication with clean abstractions that work perfectly with the Vercel MCP adapter.
 
 ## Testing the Demo
 
