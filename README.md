@@ -43,8 +43,10 @@ That's it! Your MCP server now has:
 ```bash
 git clone https://github.com/workos/vercel-mcp-example.git
 cd vercel-mcp-example
-npm install
+pnpm install
 ```
+
+> **Note**: We recommend using `pnpm` as it handles React 19 peer dependency warnings gracefully. If using npm, add the `--legacy-peer-deps` flag.
 
 ### 2. Set Up WorkOS
 1. Create a [WorkOS account](https://dashboard.workos.com) (free)
@@ -204,11 +206,11 @@ We welcome contributions to this project! Here's how you can help:
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/vercel-mcp-example.git`
-3. Install dependencies: `npm install`
+3. Install dependencies: `pnpm install` (or `npm install --legacy-peer-deps`)
 4. Create a branch: `git checkout -b feature/your-feature-name`
 5. Make your changes and write tests
-6. Run the test suite: `npm run test`
-7. Run linting and formatting: `npm run lint && npm run prettier`
+6. Run the test suite: `pnpm run test`
+7. Run linting and formatting: `pnpm run lint && pnpm run prettier`
 8. Push to your fork and submit a pull request
 
 ### Guidelines
