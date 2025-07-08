@@ -1,5 +1,6 @@
 import { ensureUserAuthenticated, isAuthenticated } from '../lib/auth/helpers';
 import { User } from '../lib/auth/types';
+import { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 
 describe('Authentication Helpers', () => {
   const mockUser: User = {
@@ -9,11 +10,21 @@ describe('Authentication Helpers', () => {
     lastName: 'User',
   };
 
-  const mockAuthInfo = {
+  const mockAuthInfo: AuthInfo = {
+    token: 'mock-token',
+    clientId: 'mock-client-id',
+    scopes: ['read'],
     extra: {
       user: mockUser,
       claims: { sub: 'user_123' },
     },
+  };
+
+  const mockAuthInfoWithoutUser: AuthInfo = {
+    token: 'mock-token',
+    clientId: 'mock-client-id',
+    scopes: ['read'],
+    extra: {},
   };
 
   describe('isAuthenticated', () => {
@@ -22,11 +33,11 @@ describe('Authentication Helpers', () => {
     });
 
     it('should return false for null auth info', () => {
-      expect(isAuthenticated(null)).toBe(false);
+      expect(isAuthenticated(undefined)).toBe(false);
     });
 
     it('should return false for auth info without user', () => {
-      expect(isAuthenticated({ extra: {} })).toBe(false);
+      expect(isAuthenticated(mockAuthInfoWithoutUser)).toBe(false);
     });
   });
 
@@ -36,13 +47,13 @@ describe('Authentication Helpers', () => {
     });
 
     it('should throw error for null auth info', () => {
-      expect(() => ensureUserAuthenticated(null)).toThrow(
+      expect(() => ensureUserAuthenticated(undefined)).toThrow(
         'Authentication required for this tool'
       );
     });
 
     it('should throw error for auth info without user', () => {
-      expect(() => ensureUserAuthenticated({ extra: {} })).toThrow(
+      expect(() => ensureUserAuthenticated(mockAuthInfoWithoutUser)).toThrow(
         'Authentication required for this tool'
       );
     });
