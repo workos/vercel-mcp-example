@@ -15,13 +15,15 @@ const handler = createMcpHandler((server) => {
     {
       name: z.string().min(1),
       description: z.string().min(1),
+      ownerId: z.string().min(1), // Business logic needs to know who owns it
     },
-    async ({ name, description }) => {
-      // Simple business logic - anyone can create data
+    async ({ name, description, ownerId }) => {
+      // Simple business logic - takes ownerId as a parameter
       const newItem = {
         id: Math.random().toString(36).substr(2, 9),
         name,
         description,
+        ownerId, // Store who created this item
         createdAt: new Date().toISOString(),
       };
       return {
@@ -35,7 +37,7 @@ export { handler as GET, handler as POST };
 ```
 
 ```typescript
-// 2. Add authentication to protect your business logic
+// 2. Add authentication to automatically provide user context
 import { experimental_withMcpAuth } from '@vercel/mcp-adapter';
 import { ensureUserAuthenticated } from './lib/auth/helpers';
 import { createExampleData } from './lib/business/examples';
@@ -47,10 +49,13 @@ const handler = createMcpHandler((server) => {
     {
       name: z.string().min(1),
       description: z.string().min(1),
+      // No ownerId needed - auth provides it automatically!
     },
     async ({ name, description }, { authInfo }) => {
-      // Now require authentication and get user context
+      // Extract user ID from authentication context
       const user = ensureUserAuthenticated(authInfo);
+      
+      // Pass user.id as ownerId to your business logic
       const newItem = await createExampleData({ name, description }, user);
       return {
         content: [{ 
@@ -76,7 +81,7 @@ const authHandler = experimental_withMcpAuth(
       token: bearerToken, 
       clientId: payload.sub, 
       scopes: [], 
-      extra: { user, claims: payload } 
+      extra: { user, claims: payload } // ← User context available in tools
     };
   },
   { required: true }
@@ -158,17 +163,20 @@ export const ensureUserAuthenticated = (authInfo: any): User => {
 Use it in your tools to safely access user data:
 
 ```typescript
-// Without auth - anyone can call
-server.tool('getPublicStats', {}, async () => {
+// Without auth - business logic needs explicit user context
+server.tool('getPublicStats', {
+  ownerId: z.string().min(1) // Caller must provide user ID
+}, async ({ ownerId }) => {
+  const data = await getDataForUser(ownerId);
   return { 
-    content: [{ type: 'text', text: 'Total users: 1,234' }] 
+    content: [{ type: 'text', text: `Found ${data.length} items for user ${ownerId}` }] 
   };
 });
 
-// With auth - only authenticated users
+// With auth - user context provided automatically
 server.tool('getUserData', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // ← Throws if not authenticated
-  const data = await getExampleData(user);         // ← Safe to use user.id
+  const user = ensureUserAuthenticated(authInfo); // ← Get authenticated user
+  const data = await getExampleData(user);         // ← Pass user object to business logic
   return { 
     content: [{ 
       type: 'text', 
