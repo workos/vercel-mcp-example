@@ -1,6 +1,6 @@
 # Getting Started with WorkOS MCP Authentication
 
-This comprehensive guide will help you get the **AuthKit MCP Template** up and running, from initial setup to testing with real MCP clients.
+This guide will help you get the **MCP Authentication Template** up and running, from initial setup to building your own tools and deploying to production.
 
 ## Prerequisites
 
@@ -17,8 +17,10 @@ Before you begin, ensure you have:
 ```bash
 git clone https://github.com/workos/vercel-mcp-example.git
 cd vercel-mcp-example
-npm install
+pnpm install
 ```
+
+> **Note**: We recommend using `pnpm` as it handles React 19 peer dependency warnings gracefully. If using npm, add the `--legacy-peer-deps` flag.
 
 ### 2. **Create Environment Configuration**
 
@@ -64,21 +66,18 @@ Copy the output and paste it as your `WORKOS_COOKIE_PASSWORD` value.
 
 ### 2. **Get Your API Credentials**
 
-1. Navigate to **"API Keys"** in the sidebar
-2. Copy your **API Key** (starts with `sk_test_`) 
+1. Navigate to **"Overview"** 
+2. Copy your **API Key** (starts with `sk_test_` if in a non-production environment) 
 3. Copy your **Client ID** (starts with `client_`)
 4. Add these to your `.env.local` file
 
 ### 3. **Configure AuthKit**
 
-1. Navigate to **"AuthKit"** in the sidebar
-2. Click **"Configure"** or **"Set up AuthKit"**
+1. Navigate to **"Redirects"** in the sidebar
 3. Add your redirect URI: `http://localhost:3000/callback`
 4. Configure your preferred authentication methods:
    - **Email + Password**: For simple testing
    - **Google OAuth**: For SSO testing  
-   - **GitHub OAuth**: For developer authentication
-   - **Magic Link**: For passwordless authentication
 
 ### 4. **Verify Configuration**
 
@@ -96,7 +95,7 @@ NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL=http://localhost:3000
 ### 1. **Start the Development Server**
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 You should see:
@@ -197,40 +196,39 @@ Add to your Claude Desktop MCP settings:
 
 ## Part 5: Understanding the Code
 
-### Key Files to Explore
+### Template Structure
 
-1. **`app/mcp/route.ts`** - The main MCP server with authHandler pattern
-2. **`app/components/TestingSection.tsx`** - Built-in testing interface
-3. **`lib/business/examples.ts`** - Your business logic (replace this with your own)
-4. **`lib/with-authkit.ts`** - Authentication utilities
+This template gives you everything you need to build production MCP servers:
 
-### The AuthHandler Pattern
+1. **`app/mcp/route.ts`** - Your main MCP server (replace example tools with yours)
+2. **`lib/business/examples.ts`** - Example business logic (replace with your data/API calls)
+3. **`lib/auth/helpers.ts`** - Authentication helpers for your tools
+4. **`app/components/TestingSection.tsx`** - Built-in testing interface
 
-The core pattern is in `app/mcp/route.ts`:
+### The Core Pattern
+
+**Key insight**: Individual tools decide if they need authentication.
 
 ```typescript
-// 1. Build your MCP server
-const handler = createMcpHandler((server) => {
-  server.tool('getUserProfile', {}, async (args, { authInfo }) => {
-    const user = getUserFromAuthInfo(authInfo); // Gets authenticated user
-    return { content: [{ type: 'text', text: JSON.stringify(user) }] };
-  });
+// Public tool - no auth needed
+server.tool("publicData", {}, async () => {
+  return getPublicData(); // Anyone can call this
 });
 
-// 2. Wrap with authentication
-const authHandler = experimental_withMcpAuth(
-  handler,
-  async (request, token) => {
-    const { payload } = await jwtVerify(token, JWKS); // Verify JWT
-    const user = await workos.userManagement.getUser(payload.sub); // Get user
-    return { token, clientId, scopes: [], extra: { user, claims: payload } };
-  },
-  { required: false } // Allow public tools
-);
-
-// 3. Export for deployment
-export { authHandler as GET, authHandler as POST };
+// Private tool - decides it needs auth  
+server.tool("userData", {}, async (args, extra) => {
+  const user = ensureUserAuthenticated(extra.authInfo); // ← Add this line
+  return getUserData(user); // Now you have the WorkOS user object
+});
 ```
+
+### How It Works
+
+1. **Wrap your handler** with `experimental_withMcpAuth`
+2. **Verify JWT tokens** with WorkOS (automatic)
+3. **Tools get user context** through our helper functions
+
+The `ensureUserAuthenticated` helper throws an error if authentication is required but missing, otherwise returns the WorkOS user object with email, name, etc.
 
 ## Troubleshooting
 
@@ -265,11 +263,12 @@ export { authHandler as GET, authHandler as POST };
 
 ## Next Steps
 
-Once you have the basic setup working:
+Once you have the template running:
 
-1. **[Customize for your use case](customization.md)** - Replace the example API with your business logic
-2. **[Deploy to production](deployment.md)** - Deploy your authenticated MCP server to Vercel
-3. **[Test with real MCP clients](TESTING.md)** - Connect Claude Desktop, Cursor, or other MCP clients
-4. **Explore scenarios** - Visit [http://localhost:3000/scenarios](http://localhost:3000/scenarios) for guided testing
+1. **Build your tools** - Replace `lib/business/examples.ts` with your business logic
+2. **Test locally** - Use the built-in testing interface to verify everything works
+3. **[Deploy to production](deployment.md)** - Deploy your authenticated MCP server to Vercel  
+4. **[Customize further](customization.md)** - Add role-based access, organization filtering, etc.
+5. **[Connect MCP clients](TESTING.md)** - Use with Claude Desktop, Cursor, or other MCP clients
 
-**Congratulations!** You now have a working authenticated MCP server using the authHandler pattern. The combination of Vercel AI SDK and WorkOS AuthKit gives you enterprise-grade security with developer-friendly implementation.
+**Congratulations!** You now have a production-ready MCP server template. The combination of Vercel MCP adapter and WorkOS AuthKit gives you enterprise-grade security with developer-friendly implementation.

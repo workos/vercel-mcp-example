@@ -1,5 +1,8 @@
 import { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
-import { ServerRequest, ServerNotification } from '@modelcontextprotocol/sdk/types.js';
+import {
+  ServerRequest,
+  ServerNotification,
+} from '@modelcontextprotocol/sdk/types.js';
 import { createMcpHandler } from '@vercel/mcp-adapter';
 import { isAuthenticated } from '../../auth/helpers';
 
@@ -13,7 +16,10 @@ export function registerPublicTools(server: MCPServer) {
     'ping',
     'Health check endpoint that works without authentication. Useful for testing MCP server connectivity.',
     {},
-    async (_args, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => {
+    async (
+      _args,
+      extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+    ) => {
       const { authInfo } = extra;
       const isAuth = isAuthenticated(authInfo);
       const result = {
@@ -33,6 +39,6 @@ export function registerPublicTools(server: MCPServer) {
           },
         ],
       };
-    },
+    }
   );
-} 
+}

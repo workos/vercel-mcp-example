@@ -22,13 +22,6 @@ The easiest way to deploy this template is with [Vercel](https://vercel.com/).
     - `WORKOS_CLIENT_ID`
     - `WORKOS_COOKIE_PASSWORD`
 
-    If you are using the OpenAPI integration, you will also need to set the following:
-    - `OPENAPI_SPEC_URL`
-    - `OPENAPI_BASE_URL`
-    - `OPENAPI_API_KEY`
-    - `OPENAPI_USER_ID_HEADER`
-    - `OPENAPI_AUTH_HEADER`
-
     Vercel will automatically set the `NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL` environment variable for you.
 
 4.  **Update your WorkOS redirect URI:**

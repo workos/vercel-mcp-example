@@ -1,41 +1,133 @@
-# Simple MCP Authentication Demo: Vercel AI SDK + WorkOS AuthKit
+# MCP Authentication Demo: Vercel MCP Adapter + WorkOS AuthKit
 
-The **clearest and simplest** example of how to add enterprise authentication to MCP servers using the Vercel AI SDK and WorkOS AuthKit.
+A production-ready template for building authenticated MCP servers using the Vercel MCP adapter and WorkOS AuthKit. Clone this repo, add your tools, and deploy instantly to Vercel with enterprise authentication built-in.
 
 ## What This Demo Shows
 
-This demo illustrates the `authHandler` pattern - a simple wrapper that transforms any MCP server into an authenticated service:
+**Core insight**: Individual tools decide if they need authentication. No global auth requirements, no complex middleware.
+
+### The Pattern
 
 ```typescript
-// 1. Build your MCP server (business logic)
+// Without auth: pure business logic
+server.tool("publicData", {}, async () => {
+  return getPublicData();
+});
+
+// With auth: same logic + one helper call
+server.tool("userData", {}, async (args, extra) => {
+  const user = ensureUserAuthenticated(extra.authInfo); // ← Just add this line
+  return getUserData(user);
+});
+```
+
+### How It Works
+
+1. **Wrap your handler** with `experimental_withMcpAuth`:
+```typescript
+const authHandler = experimental_withMcpAuth(handler, verifyToken, { 
+  required: false // ← Tools decide individually
+});
+```
+
+2. **Verify tokens** with direct WorkOS calls:
+```typescript
+const verifyToken = async (req: Request, bearerToken?: string) => {
+  if (!bearerToken) return undefined; // Allow unauthenticated requests
+  
+  const { payload } = await jwtVerify(bearerToken, JWKS);        // WorkOS JWT
+  const user = await workos.userManagement.getUser(payload.sub); // WorkOS User API
+  
+  return { token: bearerToken, clientId: user.id, extra: { user } };
+};
+```
+
+3. **Tools get user context** through our helper:
+```typescript
+// lib/auth/helpers.ts
+export const ensureUserAuthenticated = (authInfo: AuthInfo | undefined): User => {
+  if (!authInfo?.extra?.user) {
+    throw new Error('Authentication required for this tool');
+  }
+  return authInfo.extra.user; // WorkOS user object
+};
+```
+
+That's it! Your MCP server now has enterprise authentication with zero global auth logic.
+
+<details>
+<summary>See the complete implementation</summary>
+
+```typescript
+// app/mcp/route.ts - Complete authenticated MCP server
+import { createMcpHandler, experimental_withMcpAuth } from "@vercel/mcp-adapter";
+import { jwtVerify } from "jose";
+import { ensureUserAuthenticated, isAuthenticated } from "../../lib/auth/helpers";
+
+// Clean MCP handler - tools decide auth individually
 const handler = createMcpHandler((server) => {
-  server.tool('getUserData', {}, async (args, { authInfo }) => {
-    const user = ensureUserAuthenticated(authInfo); // ← Get authenticated user
-    return { userData: await getData(user.id) };    // ← Access user's data safely
+  // Public tool
+  server.tool("ping", {}, async (args, extra) => {
+    const authenticated = isAuthenticated(extra.authInfo);
+    return { 
+      content: [{ 
+        type: "text", 
+        text: authenticated ? "Hello authenticated user!" : "Hello world!" 
+      }] 
+    };
+  });
+  
+  // Private tool - decides it needs auth
+  server.tool("getUserProfile", {}, async (args, extra) => {
+    const user = ensureUserAuthenticated(extra.authInfo); // Throws if not authenticated
+    return { 
+      content: [{ 
+        type: "text", 
+        text: `Profile: ${user.email} (${user.firstName} ${user.lastName})` 
+      }] 
+    };
   });
 });
 
-// 2. Add authentication (security wrapper)
-const authHandler = experimental_withMcpAuth(
-  handler,
-  async (request, token) => {
-    // Verify JWT and fetch user from WorkOS
-    const { payload } = await jwtVerify(token, JWKS);
+// WorkOS token verification
+const verifyToken = async (req: Request, bearerToken?: string) => {
+  if (!bearerToken) return undefined;
+  
+  try {
+    const { payload } = await jwtVerify(bearerToken, JWKS);
     const user = await workos.userManagement.getUser(payload.sub);
-    
-    return { token, clientId, scopes: [], extra: { user, claims: payload } };
+    return { token: bearerToken, clientId: user.id, extra: { user, claims: payload } };
+  } catch (error) {
+    return undefined;
   }
-);
+};
 
-// 3. Expose authenticated MCP server
+// Authenticated handler
+const authHandler = experimental_withMcpAuth(handler, verifyToken, { required: false });
+
 export { authHandler as GET, authHandler as POST };
 ```
 
-That's it! Your MCP server now has:
-- ✅ Enterprise JWT authentication  
-- ✅ Automatic user context in all tools
-- ✅ SSO support (Google, Microsoft, SAML)
-- ✅ Zero-config deployment to Vercel Edge
+</details>
+
+**Result**: Enterprise authentication with SSO support, automatic user context in tools, and zero-config Vercel deployment.
+
+## Ready-to-Deploy Template
+
+This isn't just a demo—it's a complete template you can build on:
+
+- **Replace the example tools** in `lib/business/examples.ts` with your own business logic
+- **Add new authenticated tools** using the same pattern shown above
+- **Test everything locally** with the built-in web interface and testing tools
+- **Deploy to Vercel** in one command with enterprise auth already configured
+
+### Built-in Testing Interface
+
+The template includes a complete testing interface so you can verify your tools work correctly:
+
+![In-app testing interface](public/in-app-testing.webp)
+
+Test both public and authenticated tools directly from your browser, with automatic token management and clear response formatting.
 
 ## Quick Start
 
@@ -43,8 +135,10 @@ That's it! Your MCP server now has:
 ```bash
 git clone https://github.com/workos/vercel-mcp-example.git
 cd vercel-mcp-example
-npm install
+pnpm install
 ```
+
+> **Note**: We recommend using `pnpm` as it handles React 19 peer dependency warnings gracefully. If using npm, add the `--legacy-peer-deps` flag.
 
 ### 2. Set Up WorkOS
 1. Create a [WorkOS account](https://dashboard.workos.com) (free)
@@ -72,64 +166,15 @@ npm run dev
 
 Visit [http://localhost:3000](http://localhost:3000) to try the authenticated MCP server!
 
-## How It Works
-
-### The Demo MCP Server
-
-The server in `app/mcp/route.ts` shows 5 example tools:
-
-1. **`ping`** - Public tool (no auth required)
-2. **`listExampleData`** - Get user's data (auth required)  
-3. **`createExampleData`** - Create user data (auth required)
-4. **`updateExampleData`** - Update user data (auth required)
-5. **`getUserProfile`** - Get WorkOS user profile (auth required)
-
-### Key Pattern: `ensureUserAuthenticated`
-
-```typescript
-// Helper function that ensures authentication
-const ensureUserAuthenticated = (authInfo: any): User => {
-  const workosAuth = authInfo?.extra as WorkOSAuthInfo;
-  if (!workosAuth || !workosAuth.user) {
-    throw new Error('Authentication required for this tool');
-  }
-  return workosAuth.user;
-};
-
-// Use in any tool that needs authentication
-server.tool('protectedTool', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // Throws if not authenticated
-  // ... now safely use user.id, user.email, etc.
-});
-```
-
-### Mixed Authentication Support
-
-The demo shows how to support both public and private tools in the same server:
-
-```typescript
-// Public tool - anyone can call
-server.tool('ping', {}, async (args, { authInfo }) => {
-  const isAuth = isAuthenticated(authInfo); // Check without throwing
-  return { message: isAuth ? 'Hello authenticated user!' : 'Hello world!' };
-});
-
-// Private tool - authentication required  
-server.tool('getUserData', {}, async (args, { authInfo }) => {
-  const user = ensureUserAuthenticated(authInfo); // Throws if not authenticated
-  return { userData: await getUserData(user.id) };
-});
-```
-
 ## Testing the Demo
 
-The web interface includes built-in testing tools:
+The template includes a complete web interface for testing your MCP tools:
 
-1. **Test without login** - Try the `ping` tool (works)
-2. **Login with WorkOS** - Use the login button  
-3. **Test with login** - Try authenticated tools like `getUserProfile`
+1. **Test public tools** - Try `ping` without authentication
+2. **Login with WorkOS** - Use the login button to authenticate  
+3. **Test authenticated tools** - Try tools like `getUserProfile` that require user context
 
-You can also test with any MCP client by configuring it to use your local server with a JWT token.
+The interface handles token management automatically and displays responses in a clean, readable format. You can also test with any MCP client by configuring it to use your local server.
 
 ## Architecture
 
@@ -144,11 +189,7 @@ graph LR
   style D fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#ffffff
 ```
 
-1. **MCP Client** sends request with JWT token
-2. **authHandler** verifies JWT with WorkOS public keys
-3. **WorkOS API** provides user profile and claims  
-4. **MCP Tools** receive authenticated user context
-5. **Response** includes user-specific data
+Simple flow: Client → Auth wrapper → JWT verification → Tools decide if they need user context → WorkOS API (if needed).
 
 ## Code Organization
 
@@ -183,19 +224,51 @@ lib/
 
 ## Next Steps
 
-1. **Explore the code** - See how simple the pattern is
-2. **Customize the tools** - Replace lib/business/examples.ts with your business logic  
-3. **Deploy to production** - Just `vercel deploy` (environment variables needed)
-4. **Add more auth features** - Role-based access, organization filtering, etc.
+1. **Explore the code** - See how the authentication pattern works
+2. **Build your tools** - Replace `lib/business/examples.ts` with your business logic  
+3. **Test locally** - Use the built-in testing interface to verify everything works
+4. **Deploy to production** - Run `vercel deploy` with your environment variables
+5. **Add advanced features** - Role-based access, organization filtering, etc.
 
 ## Why This Stack?
 
-- **Vercel AI SDK**: Type-safe MCP development with zero-config deployment
+- **Vercel MCP adapter**: Type-safe MCP development with zero-config deployment
 - **WorkOS AuthKit**: Enterprise authentication (SSO, user management, compliance)
 - **Simple Pattern**: Business logic stays clean, security is declarative
 
-Perfect for building AI tools that need real user authentication and enterprise features.
+Perfect for building production AI tools that need real user authentication and enterprise features.
+
+## Contributing
+
+We welcome contributions to this project! Here's how you can help:
+
+### Development Setup
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/vercel-mcp-example.git`
+3. Install dependencies: `pnpm install` (or `npm install --legacy-peer-deps`)
+4. Create a branch: `git checkout -b feature/your-feature-name`
+5. Make your changes and write tests
+6. Run the test suite: `pnpm run test`
+7. Run linting and formatting: `pnpm run lint && pnpm run prettier`
+8. Push to your fork and submit a pull request
+
+### Guidelines
+
+- Write clear, concise commit messages
+- Add tests for new functionality
+- Ensure all tests pass before submitting
+- Follow the existing code style and conventions
+- Update documentation as needed
+
+### Reporting Issues
+
+Please use the [GitHub Issues](https://github.com/workos/vercel-mcp-example/issues) page to report bugs or request features.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Questions?** Check the [WorkOS MCP docs](https://workos.com/docs/user-management/mcp) or [Vercel AI SDK docs](https://vercel.com/docs/ai-sdk).
+**Questions?** Check the [WorkOS MCP docs](https://workos.com/docs/user-management/mcp) or [Vercel MCP adapter docs](https://sdk.vercel.ai/docs/foundations/mcp).
