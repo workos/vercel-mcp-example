@@ -53,7 +53,7 @@ export default function Navigation({ user }: NavigationProps) {
             <ThemeToggle />
             {/* GitHub Repo Badge */}
             <a
-              href="https://github.com/workos/mcp-server-example"
+              href="https://github.com/workos/vercel-mcp-example"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:inline-flex items-center space-x-2 bg-gray-100 dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 text-gray-800 dark:text-neutral-200 hover:bg-gray-200 dark:hover:bg-neutral-700 px-3 py-1.5 rounded-full transition-colors"
