@@ -41,6 +41,9 @@ jobs:
         run: pnpm run test:coverage
 
       - name: Build application
+        env:
+          WORKOS_API_KEY: ${{ secrets.WORKOS_API_KEY }}
+          WORKOS_CLIENT_ID: ${{ secrets.WORKOS_CLIENT_ID }}
         run: pnpm run build
 
       - name: Check for build artifacts
