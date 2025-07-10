@@ -106,7 +106,7 @@ export default async function Home() {
                     </span>
                   </span>
                   <span className="block text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-[#3EC8FF] via-[#6B5CFF] to-[#00E0FF]">
-                    With the Vercel AI SDK and WorkOS
+                    With the Vercel MCP Adapter and WorkOS
                   </span>
                 </h1>
 
