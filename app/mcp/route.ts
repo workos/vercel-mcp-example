@@ -1,8 +1,8 @@
 /**
- * AuthHandler Pattern Demo: Vercel AI SDK + WorkOS AuthKit
+ * AuthHandler Pattern Demo: Vercel MCP Adapter + WorkOS AuthKit
  *
  * This file demonstrates the powerful authHandler wrapper pattern that
- * transforms any MCP server built with the Vercel AI SDK into an
+ * transforms any MCP server built with the Vercel MCP Adapter into an
  * enterprise-ready, authenticated service with just a few lines of code.
  *
  * Key components:
