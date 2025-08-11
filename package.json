@@ -15,7 +15,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@modelcontextprotocol/sdk": "^1.17.2",
     "@tailwindcss/postcss": "^4.1.10",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@vercel/mcp-adapter": "^0.11.2",
