@@ -27,8 +27,8 @@ importers:
         specifier: ^2.4.2
         version: 2.4.2(express@5.1.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       jose:
-        specifier: ^6.0.11
-        version: 6.0.11
+        specifier: ^6.0.13
+        version: 6.0.13
       mermaid:
         specifier: ^11.7.0
         version: 11.8.1
@@ -2796,8 +2796,8 @@ packages:
   jose@5.6.3:
     resolution: {integrity: sha512-1Jh//hEEwMhNYPDDLwXHa2ePWgWiFNNUadVmguAAw2IJ6sj9mNxV5tGXJNqlMkJAybF6Lgw1mISDxTePP/187g==}
 
-  jose@6.0.11:
-    resolution: {integrity: sha512-QxG7EaliDARm1O1S8BGakqncGT9s25bKL1WSf6/oa17Tkqwi8D2ZNglqCF+DsYF88/rV66Q/Q2mFAy697E1DUg==}
+  jose@6.0.13:
+    resolution: {integrity: sha512-Yms4GpbmdANamS51kKK6w4hRlKx8KTxbWyAAKT/MhUMtqbIqh5mb2HjhTNUbk7TFL8/MBB5zWSDohL7ed4k/UA==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -7328,7 +7328,7 @@ snapshots:
 
   jose@5.6.3: {}
 
-  jose@6.0.11: {}
+  jose@6.0.13: {}
 
   js-tokens@4.0.0: {}
 
