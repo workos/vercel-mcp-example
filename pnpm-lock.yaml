@@ -48,8 +48,8 @@ importers:
         specifier: ^15.6.1
         version: 15.6.1(react@19.1.0)
       zod:
-        specifier: ^3.24.4
-        version: 3.25.76
+        specifier: ^4.1.1
+        version: 4.1.1
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.1.4
@@ -4006,6 +4006,9 @@ packages:
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
+
+  zod@4.1.1:
+    resolution: {integrity: sha512-SgMZK/h8Tigt9nnKkfJMvB/mKjiJXaX26xegP4sa+0wHIFVFWVlsQGdhklDmuargBD3Hsi3rsQRIzwJIhTPJHA==}
 
 snapshots:
 
@@ -8645,3 +8648,5 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.1.1: {}
