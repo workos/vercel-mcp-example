@@ -23,14 +23,14 @@ server.tool("userData", {}, async (args, extra) => {
 
 ### How It Works
 
-1. **Wrap your handler** with `experimental_withMcpAuth`:
+1. **Wrap your handler** with `withMcpAuth`:
 ```typescript
-const authHandler = experimental_withMcpAuth(handler, verifyToken, { 
+const authHandler = withMcpAuth(handler, verifyToken, { 
   required: false // ← Tools decide individually
 });
 ```
 
-2. **Verify tokens** with direct WorkOS calls:
+1. **Verify tokens** with direct WorkOS calls:
 ```typescript
 const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined; // Allow unauthenticated requests
@@ -60,7 +60,7 @@ That's it! Your MCP server now has enterprise authentication with zero global au
 
 ```typescript
 // app/mcp/route.ts - Complete authenticated MCP server
-import { createMcpHandler, experimental_withMcpAuth } from "@vercel/mcp-adapter";
+import { createMcpHandler, withMcpAuth } from "@vercel/mcp-adapter";
 import { jwtVerify } from "jose";
 import { ensureUserAuthenticated, isAuthenticated } from "../../lib/auth/helpers";
 
@@ -103,7 +103,7 @@ const verifyToken = async (req: Request, bearerToken?: string) => {
 };
 
 // Authenticated handler
-const authHandler = experimental_withMcpAuth(handler, verifyToken, { required: false });
+const authHandler = withMcpAuth(handler, verifyToken, { required: false });
 
 export { authHandler as GET, authHandler as POST };
 ```

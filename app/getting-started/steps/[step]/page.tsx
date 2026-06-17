@@ -172,7 +172,7 @@ WORKOS_REDIRECT_URI=http://localhost:3000/callback`,
     E -->|No| F["✅ Execute Tool (ping)"]
     E -->|Yes| G["❌ Throw Auth Error"]
     
-    B -->|Yes| H["🔐 experimental_withMcpAuth"]
+    B -->|Yes| H["🔐 withMcpAuth"]
     H --> I["📋 Extract Bearer Token"]
     I --> J["🔍 Verify JWT with WorkOS JWKS"]
     J --> K{Valid JWT?}
@@ -220,7 +220,7 @@ const handler = createMcpHandler((server) => {
 });
 
 // 2. Add authentication wrapper (line ~37-80 in app/mcp/route.ts)
-const authHandler = experimental_withMcpAuth(
+const authHandler = withMcpAuth(
   handler,
   async (request, token) => {
     // Verify JWT and get user from WorkOS
