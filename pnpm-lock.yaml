@@ -21,8 +21,8 @@ importers:
         specifier: ^15.5.13
         version: 15.5.13
       '@vercel/mcp-adapter':
-        specifier: ^0.11.2
-        version: 0.11.2(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
+        specifier: ^1.0.0
+        version: 1.0.0(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       '@workos-inc/authkit-nextjs':
         specifier: ^2.4.2
         version: 2.4.2(express@5.1.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1236,8 +1236,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vercel/mcp-adapter@0.11.2':
-    resolution: {integrity: sha512-Rt9tmHxH+LrdhqrdZ6hZSkjQi3i2RuEbcXM6IeHFIvwfefJM1kYVDZIBM1LZQTc9s0XGiS5Adqwp2/RUP8UEEQ==}
+  '@vercel/mcp-adapter@1.0.0':
+    resolution: {integrity: sha512-o/QA4LhYCJvuL7/i8CfKPpOm29u25/L4m1LWH44EQZ8cfYJlc4B7Bu+YzDHl23m8A3hDxCJQmlgZEGmsPAQ0vQ==}
     hasBin: true
     peerDependencies:
       '@modelcontextprotocol/sdk': ^1.12.0
@@ -3014,6 +3014,16 @@ packages:
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
+
+  mcp-handler@1.0.0:
+    resolution: {integrity: sha512-EbEj9xI+mBIMXp/yt6kQbYXM1BcRuSRyv+MPLP7GQb9FpDD2mZv1N0mmFgJYaj8SbX4wudJkl3uVLT3xd56ACg==}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/sdk': ^1.12.0
+      next: '>=13.0.0'
+    peerDependenciesMeta:
+      next:
+        optional: true
 
   media-typer@1.1.0:
     resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==}
@@ -5289,12 +5299,10 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.0':
     optional: true
 
-  '@vercel/mcp-adapter@0.11.2(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))':
+  '@vercel/mcp-adapter@1.0.0(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))':
     dependencies:
       '@modelcontextprotocol/sdk': 1.15.0
-      chalk: 5.4.1
-      commander: 11.1.0
-      redis: 4.7.1
+      mcp-handler: 1.0.0(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
     optionalDependencies:
       next: 15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
@@ -7535,6 +7543,15 @@ snapshots:
   marked@15.0.12: {}
 
   math-intrinsics@1.1.0: {}
+
+  mcp-handler@1.0.0(@modelcontextprotocol/sdk@1.15.0)(next@15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.15.0
+      chalk: 5.4.1
+      commander: 11.1.0
+      redis: 4.7.1
+    optionalDependencies:
+      next: 15.3.5(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   media-typer@1.1.0: {}
 

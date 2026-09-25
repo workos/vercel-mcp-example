@@ -306,7 +306,7 @@ const handler = createMcpHandler((server) => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                      Wrap with `experimental_withMcpAuth`
+                      Wrap with `withMcpAuth`
                     </h3>
                     <p className="text-gray-700 dark:text-neutral-300 mb-6 text-lg">
                       Transform your handler into an `authHandler` that
@@ -337,7 +337,7 @@ const handler = createMcpHandler((server) => {
                       >
                         {`// 🔐 THE AUTHHANDLER PATTERN 🔐
 // Wrap your MCP handler with optional enterprise authentication
-const authHandler = experimental_withMcpAuth(
+const authHandler = withMcpAuth(
   handler, // Your regular MCP handler from step 1
   async (request, token) => {
     // No token? Return undefined (allows public tools like ping)

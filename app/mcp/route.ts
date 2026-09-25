@@ -7,13 +7,13 @@
  *
  * Key components:
  * 1. createMcpHandler() - builds the MCP server with type-safe tools
- * 2. experimental_withMcpAuth() - wraps with WorkOS authentication
+ * 2. withMcpAuth() - wraps with WorkOS authentication
  * 3. Zero-config deployment to Vercel Edge
  */
 
 import {
   createMcpHandler,
-  experimental_withMcpAuth,
+  withMcpAuth,
 } from '@vercel/mcp-adapter';
 import { getWorkOS } from '@workos-inc/authkit-nextjs';
 import { jwtVerify, createRemoteJWKSet } from 'jose';
@@ -40,8 +40,8 @@ const handler = createMcpHandler((server) => {
 
 // 🔐 THE AUTHHANDLER PATTERN 🔐
 // This is the magic: wrap any MCP server with enterprise authentication
-// in just a few lines using experimental_withMcpAuth + WorkOS
-const authHandler = experimental_withMcpAuth(
+// in just a few lines using withMcpAuth + WorkOS
+const authHandler = withMcpAuth(
   handler,
   async (request, token) => {
     // If no token is provided, allow through for public tools (like ping)

@@ -224,7 +224,7 @@ server.tool("userData", {}, async (args, extra) => {
 
 ### How It Works
 
-1. **Wrap your handler** with `experimental_withMcpAuth`
+1. **Wrap your handler** with `withMcpAuth`
 2. **Verify JWT tokens** with WorkOS (automatic)
 3. **Tools get user context** through our helper functions
 
