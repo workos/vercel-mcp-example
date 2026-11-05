@@ -36,7 +36,7 @@ const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined; // Allow unauthenticated requests
   
   const { payload } = await jwtVerify(bearerToken, JWKS, {      // WorkOS JWT
-    issuer: `https://${process.env.AUTHKIT_DOMAIN}`,
+    issuer: process.env.AUTHKIT_DOMAIN ? `https://${process.env.AUTHKIT_DOMAIN}` : undefined,
     audience: process.env.WORKOS_CLIENT_ID,
   });
   if (payload.sub_profile === 'ai_agent') return undefined;      // Reject agent tokens
@@ -99,7 +99,7 @@ const verifyToken = async (req: Request, bearerToken?: string) => {
   
   try {
     const { payload } = await jwtVerify(bearerToken, JWKS, {
-      issuer: `https://${process.env.AUTHKIT_DOMAIN}`,
+      issuer: process.env.AUTHKIT_DOMAIN ? `https://${process.env.AUTHKIT_DOMAIN}` : undefined,
       audience: process.env.WORKOS_CLIENT_ID,
     });
     if (payload.sub_profile === 'ai_agent') return undefined;

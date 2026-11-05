@@ -347,7 +347,7 @@ const authHandler = experimental_withMcpAuth(
 
     // Verify the JWT using WorkOS JWKS
     const { payload } = await jwtVerify(token, JWKS, {
-      issuer: \`https://\${process.env.AUTHKIT_DOMAIN}\`,
+      issuer: process.env.AUTHKIT_DOMAIN ? \`https://\${process.env.AUTHKIT_DOMAIN}\` : undefined,
       audience: clientId,
     });
     

@@ -225,7 +225,7 @@ const authHandler = experimental_withMcpAuth(
   async (request, token) => {
     // Verify JWT and get user from WorkOS
     const { payload } = await jwtVerify(token, JWKS, {
-      issuer: \`https://\${process.env.AUTHKIT_DOMAIN}\`,
+      issuer: process.env.AUTHKIT_DOMAIN ? \`https://\${process.env.AUTHKIT_DOMAIN}\` : undefined,
       audience: clientId,
     });
     if (payload.sub_profile === 'ai_agent') throw new Error('Agent tokens are not accepted');
