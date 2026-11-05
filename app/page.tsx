@@ -346,10 +346,17 @@ const authHandler = experimental_withMcpAuth(
     }
 
     // Verify the JWT using WorkOS JWKS
-    const { payload } = await jwtVerify(token, JWKS);
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: process.env.AUTHKIT_DOMAIN ? \`https://\${process.env.AUTHKIT_DOMAIN}\` : undefined,
+      audience: clientId,
+    });
     
     if (!payload.sub) {
       throw new Error('Invalid token: missing sub claim');
+    }
+
+    if (payload.sub_profile === 'ai_agent') {
+      throw new Error('Invalid token: agent tokens are not accepted');
     }
 
     // Fetch user profile from WorkOS

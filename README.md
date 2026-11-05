@@ -35,7 +35,11 @@ const authHandler = experimental_withMcpAuth(handler, verifyToken, {
 const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined; // Allow unauthenticated requests
   
-  const { payload } = await jwtVerify(bearerToken, JWKS);        // WorkOS JWT
+  const { payload } = await jwtVerify(bearerToken, JWKS, {      // WorkOS JWT
+    issuer: process.env.AUTHKIT_DOMAIN ? `https://${process.env.AUTHKIT_DOMAIN}` : undefined,
+    audience: process.env.WORKOS_CLIENT_ID,
+  });
+  if (payload.sub_profile === 'ai_agent') return undefined;      // Reject agent tokens
   const user = await workos.userManagement.getUser(payload.sub); // WorkOS User API
   
   return { token: bearerToken, clientId: user.id, extra: { user } };
@@ -94,7 +98,11 @@ const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined;
   
   try {
-    const { payload } = await jwtVerify(bearerToken, JWKS);
+    const { payload } = await jwtVerify(bearerToken, JWKS, {
+      issuer: process.env.AUTHKIT_DOMAIN ? `https://${process.env.AUTHKIT_DOMAIN}` : undefined,
+      audience: process.env.WORKOS_CLIENT_ID,
+    });
+    if (payload.sub_profile === 'ai_agent') return undefined;
     const user = await workos.userManagement.getUser(payload.sub);
     return { token: bearerToken, clientId: user.id, extra: { user, claims: payload } };
   } catch (error) {
@@ -155,6 +163,8 @@ Fill in your WorkOS credentials:
 ```env
 WORKOS_API_KEY=sk_test_your_api_key_here
 WORKOS_CLIENT_ID=client_your_client_id_here
+# Optional but recommended: rejects tokens from any other issuer
+AUTHKIT_DOMAIN=your-subdomain.authkit.app
 WORKOS_COOKIE_PASSWORD=your_32_character_secure_random_string
 WORKOS_REDIRECT_URI=http://localhost:3000/callback
 ```
