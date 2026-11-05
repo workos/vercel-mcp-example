@@ -28,6 +28,12 @@ if (!clientId) {
   throw new Error('WORKOS_CLIENT_ID environment variable not set');
 }
 
+const authkitDomain = process.env.AUTHKIT_DOMAIN;
+
+if (!authkitDomain) {
+  throw new Error('AUTHKIT_DOMAIN environment variable not set');
+}
+
 // Fetch the JWKS from WorkOS
 const jwksUrl = new URL(`https://api.workos.com/sso/jwks/${clientId}`);
 const JWKS = createRemoteJWKSet(jwksUrl);
@@ -52,10 +58,19 @@ const authHandler = experimental_withMcpAuth(
 
     try {
       // Verify the JWT using WorkOS JWKS
-      const { payload } = await jwtVerify(token, JWKS);
+      // Verify the signature, expiry, issuer and audience
+      const { payload } = await jwtVerify(token, JWKS, {
+        issuer: `https://${authkitDomain}`,
+        audience: clientId,
+      });
 
       if (!payload.sub) {
         throw new Error('Invalid token: missing sub claim');
+      }
+
+      // Agent tokens are signed by the same issuer; only user tokens may call tools
+      if (payload.sub_profile === 'ai_agent') {
+        throw new Error('Invalid token: agent tokens are not accepted');
       }
 
       // Fetch user profile from WorkOS

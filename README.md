@@ -35,7 +35,11 @@ const authHandler = experimental_withMcpAuth(handler, verifyToken, {
 const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined; // Allow unauthenticated requests
   
-  const { payload } = await jwtVerify(bearerToken, JWKS);        // WorkOS JWT
+  const { payload } = await jwtVerify(bearerToken, JWKS, {      // WorkOS JWT
+    issuer: `https://${process.env.AUTHKIT_DOMAIN}`,
+    audience: process.env.WORKOS_CLIENT_ID,
+  });
+  if (payload.sub_profile === 'ai_agent') return undefined;      // Reject agent tokens
   const user = await workos.userManagement.getUser(payload.sub); // WorkOS User API
   
   return { token: bearerToken, clientId: user.id, extra: { user } };
@@ -94,7 +98,11 @@ const verifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined;
   
   try {
-    const { payload } = await jwtVerify(bearerToken, JWKS);
+    const { payload } = await jwtVerify(bearerToken, JWKS, {
+      issuer: `https://${process.env.AUTHKIT_DOMAIN}`,
+      audience: process.env.WORKOS_CLIENT_ID,
+    });
+    if (payload.sub_profile === 'ai_agent') return undefined;
     const user = await workos.userManagement.getUser(payload.sub);
     return { token: bearerToken, clientId: user.id, extra: { user, claims: payload } };
   } catch (error) {
