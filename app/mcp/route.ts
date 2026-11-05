@@ -52,14 +52,10 @@ const authHandler = experimental_withMcpAuth(
 
     try {
       // Verify the JWT using WorkOS JWKS
+      // Verify the signature, expiry, audience and (when AUTHKIT_DOMAIN is set) issuer
       const authkitDomain = process.env.AUTHKIT_DOMAIN;
-      if (!authkitDomain) {
-        throw new Error('AUTHKIT_DOMAIN environment variable not set');
-      }
-
-      // Verify the signature, expiry, issuer and audience
       const { payload } = await jwtVerify(token, JWKS, {
-        issuer: `https://${authkitDomain}`,
+        issuer: authkitDomain ? `https://${authkitDomain}` : undefined,
         audience: clientId,
       });
 

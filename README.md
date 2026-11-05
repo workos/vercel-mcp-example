@@ -163,6 +163,8 @@ Fill in your WorkOS credentials:
 ```env
 WORKOS_API_KEY=sk_test_your_api_key_here
 WORKOS_CLIENT_ID=client_your_client_id_here
+# Optional but recommended: rejects tokens from any other issuer
+AUTHKIT_DOMAIN=your-subdomain.authkit.app
 WORKOS_COOKIE_PASSWORD=your_32_character_secure_random_string
 WORKOS_REDIRECT_URI=http://localhost:3000/callback
 ```
