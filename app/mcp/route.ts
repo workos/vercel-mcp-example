@@ -28,12 +28,6 @@ if (!clientId) {
   throw new Error('WORKOS_CLIENT_ID environment variable not set');
 }
 
-const authkitDomain = process.env.AUTHKIT_DOMAIN;
-
-if (!authkitDomain) {
-  throw new Error('AUTHKIT_DOMAIN environment variable not set');
-}
-
 // Fetch the JWKS from WorkOS
 const jwksUrl = new URL(`https://api.workos.com/sso/jwks/${clientId}`);
 const JWKS = createRemoteJWKSet(jwksUrl);
@@ -58,6 +52,11 @@ const authHandler = experimental_withMcpAuth(
 
     try {
       // Verify the JWT using WorkOS JWKS
+      const authkitDomain = process.env.AUTHKIT_DOMAIN;
+      if (!authkitDomain) {
+        throw new Error('AUTHKIT_DOMAIN environment variable not set');
+      }
+
       // Verify the signature, expiry, issuer and audience
       const { payload } = await jwtVerify(token, JWKS, {
         issuer: `https://${authkitDomain}`,

@@ -581,7 +581,8 @@ export { authHandler as GET, authHandler as POST };
 
             <div className="border-t border-gray-200 dark:border-neutral-800 mt-12 pt-8 text-center">
               <p className="text-gray-500 dark:text-neutral-500 text-sm">
-                © 2024 WorkOS. Built with Next.js, TypeScript, and Tailwind CSS.
+                © 2024 WorkOS. Built with Next.js, TypeScript, and Tailwind
+                CSS.
               </p>
             </div>
           </div>
